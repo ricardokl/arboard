@@ -41,6 +41,26 @@ fn main() {
 }
 ```
 
+## FAQ
+
+This section outlines some very frequently asked questions about the crate and its behavior. If your question isn't answered
+by these, please feel free to open an issue.
+
+- Q: On Linux, the data copied to the clipboard disappears too fast.
+    - A: X11 and Wayland put the responsibility for answering paste requests and serving data on the application
+    which originally copied it onto the clipboard. This usually means the app using `arboard`. In order to keep the
+    contents around longer, make sure that you don't Drop your `Clipboard` object right away.
+- Q: Why does adding `sleep`s or other timing changes to my code improve results?
+    - A: The handling of other app's clipboard requests, including clipboard managers, is handled by a background
+    worker in `arboard`. If your active thread is sleeping, it gives the worker more time to listen and finish the final data handoff.
+- Q: What are ways to keep clipboard contents around longer on Linux?
+    - A1: If your application is exiting, you must make sure there is a clipboard manager running on the system.
+    If nothing is listening for the clipboard ownership transfer, the data will be lost. Note that this isn't a
+    complete guarantee as races are possible if your program is exiting. We welcome suggestions to improve on this.
+    - A2: If your application is longer-running, it is highly recommended that you either store the `Clipboard` object in
+    some long-lived data structure (like app context, etc) or utilize the [wait](https://docs.rs/arboard/latest/arboard/trait.SetExtLinux.html#tymethod.wait)
+    method and/or threading to make sure another app can request the clipboard data later.
+
 ## Yet another clipboard crate
 
 This is a fork of `rust-clipboard`. The reason for forking instead of making a
